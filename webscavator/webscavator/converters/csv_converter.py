@@ -60,14 +60,10 @@ class CSVConverter(object):
         self.csv_file.seek(0) # rewind to beginning
         csvreader = csv.reader(self.csv_file, delimiter=self.delimiter)
         
-        
         for _ in xrange(self.skip):
             csvreader.next()
 
         for row in csvreader:
-            try:
-                yield self.process_row(row)
-            except Exception, e:
-                yield e
+            yield self.process_row(row)
 
         

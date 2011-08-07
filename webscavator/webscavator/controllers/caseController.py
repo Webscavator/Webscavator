@@ -306,9 +306,6 @@ class CaseController(BaseController):
             url_ins = URL.__table__.insert()
             count_num = 0
             for d in convert_file(program, file):
-                if isinstance(d, Exception):
-                    # error occurred during processing file
-                    raise(d)
                 
                 browser_name = d.pop('browser_name')
                 browser_version = d.pop('browser_version')

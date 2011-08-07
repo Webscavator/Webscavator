@@ -93,7 +93,11 @@ class AddData(Data):
         
         `data` -- the web history file. 
     """
-    data = UploadData(not_empty=True)
+    data = Upload(not_empty=True)
+    
+    chained_validators = [
+        CheckFileType()
+    ]
 
 class EditData(Data):
     """
@@ -121,11 +125,12 @@ class EditData(Data):
         `data` -- the new file if keepcsv is `False`.
     """
     group = All(GroupInDatabase(), v.Int(if_missing=None)) #check group is valid and of the current case
-    data = UploadData()
+    data = Upload()
     keepcsv = v.StringBoolean(if_missing=False)
     
     chained_validators = [
         RequireIfEquals('keepcsv', False, requireds=['data']),  #if not keeping the old data, then must upload new data
+        CheckFileType()
     ]
 
 class wizard2_form(Schema):

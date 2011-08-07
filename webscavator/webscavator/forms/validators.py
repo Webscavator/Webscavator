@@ -37,7 +37,7 @@ from formencode.compound import CompoundValidator
 # local imports
 from webscavator.model.models import *
 from webscavator.utils.utils import ROOT_DIR, CASE_FILE_DIR, getCases
-from webscavator.converters import get_names, convert_file, get_program
+from webscavator.converters import get_names, convert_file, get_program, get_file
 
 
 
@@ -446,22 +446,27 @@ class Upload(File):
     """
         Upload a file. The value returned is the file stream.
     """
-    type = None   # type of file 
     
     def _to_python(self, value, state):
-        
-        """
-        if not (self.type in value.content_type or value.filename.rsplit('.', 1)[-1] == self.type):
-            print value, value.content_type, value.filename, "$" * 100
-            raise Invalid(self.message('invalid', state), value, state)
-        """ 
         return value
     
-class UploadData(Upload):
-    """ 
-        Checks the file uploaded is a CSV file.
+class CheckFileType(v.FormValidator):
     """
-    messages = {
-        'invalid': 'You did not upload a CSV file'
-    } 
-    type = 'csv'
+        Checks the uploaded web history file has the correct extension
+    """
+    
+    def validate_partial(self, vals, state):
+        self.validate_python(vals, state)
+    
+    def validate_python(self, vals, state):
+        program = vals.get('program')
+        data = vals.get('data') 
+        
+        if data and program:
+            ext = get_file(program)
+            
+            rest, data_ext = path.splitext(data.filename)
+            
+            if ext != data_ext[1:]:
+                raise Invalid('', vals, state, error_dict={'data': 'You have not uploaded a {0} file'.format(ext)})
+            

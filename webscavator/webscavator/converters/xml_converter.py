@@ -28,6 +28,7 @@
 """
 
 from xml.etree import ElementTree
+from os import path
 
 class XMLConverter(object):
     """
@@ -44,14 +45,10 @@ class XMLConverter(object):
             Reads in the XML file. Finds all the top level web history elements and 
             returns a generator which can be looped over to get the normalised element entries.
         """
+                
         self.xml_file.seek(0)
         xmlreader = ElementTree.parse(self.xml_file)
         for row in xmlreader.findall(self.topelement):
-            try:
-                yield self.process_element(row)
-            except Exception, e:
-                yield e
-                    
-                
+            yield self.process_element(row)
 
-        
+    
