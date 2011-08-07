@@ -29,7 +29,7 @@ class WebhistorianConverter(XMLConverter):
             title = None
         
         if access_time: 
-            access_time = datetime.strptime(access_time[:-6],"%Y-%m-%dT%H:%M:%S") 
+            access_time = datetime.strptime(access_time,"%Y-%m-%dT%H:%M:%SZ") 
         else:
             access_time = None
         

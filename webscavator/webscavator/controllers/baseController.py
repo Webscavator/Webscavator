@@ -117,13 +117,13 @@ class BaseController(object):
         """
         return self.defaultResponse(404, 'base', '404.html')
 
-    def return500(self):
+    def return500(self, message=None):
         """ 
             Calls `defaultResponse` with a 500 page. This method is called by 
             `application()` when the endpoint
             has raised an exception or an error has happened. 
         """
-        return self.defaultResponse(500, 'base', '500.html')
+        return self.defaultResponse(500, 'base', '500.html', message=message)
     
     def returnResponse(self, *location, **vars):
         """ 

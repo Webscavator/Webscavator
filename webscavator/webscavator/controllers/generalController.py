@@ -38,34 +38,38 @@ class GeneralController(BaseController):
             if self.case: # just to check cookie set correctly
                 self.loaded_case = None
                 
-                # dates and times for the limits and end points of the timegraph
-                latest = Case.getNewestEntry(self.case).access_date
-                oldest = Case.getOldestEntry(self.case).access_date
-                start, end = Case.getMinMax(latest)
-                backward_limit = time.mktime(datetime(oldest.year, oldest.month, 1).timetuple())*1000
-                forward_limit = end
-                
-                # get all the filters
-                allfilters = Filter.getAll().all()
-                
-                # for the overview statistics and heatmap
-                browser_stats = Browser.getPercentages()
-                average_pages = Entry.averagePages()
-                peak_time = Entry.peakTime()
-                heatmap_headers, heatmap_rows, high, low = Entry.generateHeatMap()
-                
-                # for the local file access tab
-                files_accessed, file_amount = Entry.filesAccessed()
+                try:
+                    # dates and times for the limits and end points of the timegraph
+                    latest = Case.getNewestEntry(self.case).access_date
+                    oldest = Case.getOldestEntry(self.case).access_date
+                    start, end = Case.getMinMax(latest)
+                    backward_limit = time.mktime(datetime(oldest.year, oldest.month, 1).timetuple())*1000
+                    forward_limit = end
                     
-                return self.returnResponse('pages', 'index.html', ticksize = 61, start = start, 
-                                           end = end, allfilters = allfilters, 
-                                           forward_limit = forward_limit,
-                                           backward_limit = backward_limit,
-                                           heatmap_headers=heatmap_headers, peak_time=peak_time,
-                                           heatmap_rows=heatmap_rows, high=high, low=low,
-                                           browser_stats=browser_stats, average_pages=average_pages,
-                                           files_accessed=files_accessed, file_amount=file_amount
-                                           )
+                    # get all the filters
+                    allfilters = Filter.getAll().all()
+                    
+                    # for the overview statistics and heatmap
+                    browser_stats = Browser.getPercentages()
+                    average_pages = Entry.averagePages()
+                    peak_time = Entry.peakTime()
+                    heatmap_headers, heatmap_rows, high, low = Entry.generateHeatMap()
+                    
+                    # for the local file access tab
+                    files_accessed, file_amount = Entry.filesAccessed()
+                        
+                    return self.returnResponse('pages', 'index.html', ticksize = 61, start = start, 
+                                               end = end, allfilters = allfilters, 
+                                               forward_limit = forward_limit,
+                                               backward_limit = backward_limit,
+                                               heatmap_headers=heatmap_headers, peak_time=peak_time,
+                                               heatmap_rows=heatmap_rows, high=high, low=low,
+                                               browser_stats=browser_stats, average_pages=average_pages,
+                                               files_accessed=files_accessed, file_amount=file_amount
+                                               )
+                except Exception:
+                    # something went wrong with the case, most likely, not a proper database/empty. 
+                    return self.return500('The database file for {0} is empty! Please load a different file or create a new case.'.format(self.case.name))
             else:
                 return redirect(self.urls.build('case.wizard', {}))
         else:   # do wizard

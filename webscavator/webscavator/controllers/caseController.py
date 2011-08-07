@@ -203,17 +203,17 @@ class CaseController(BaseController):
             and passed back to the webpage and the errors displayed to the user. 
             If the form is valid, then `self.addData()` is called. 
             If all goes well, this will then return `True`, otherwise if their are errors in 
-            the adding of the data in `self.addData()` then self.form_erros is returned. 
+            the adding of the data in `self.addData()` then self.form_errors is returned. 
         """
         if self.validate_form(wizard2_form()):
             # form is validated, so add group details
             for i, v in enumerate(self.form_result.itervalues()):               
                 entry = v[0]
-                done = self.addData(entry)
+                done, error = self.addData(entry)
                 if done is None:
                     form_error = {}
                     form_error['csv_entry-' + str(i) + '.data'] = \
-                    'The data could not be added to the database due to an error.'
+                    'The data could not be added to the database due to an error: {0}'.format(error)
                     return form_error
             return True
         else:
@@ -250,12 +250,12 @@ class CaseController(BaseController):
             for i, v in enumerate(self.form_result.itervalues()):   
                 for entry in v:            
                     if entry[u'group'] is None: # new, so add it
-                        group = self.addData(entry)
+                        group, error = self.addData(entry)
                         
                         if group is None:
                             form_error = {}
                             form_error['csv_entry-' + str(i) + '.data'] = \
-                            'The data could not be added to the database due to an error.'
+                            'The data could not be added to the database due to an error: {0}'.format(error)
                             return form_error
                 
                         groups.append(group)
@@ -304,7 +304,12 @@ class CaseController(BaseController):
         try:
             entry_ins = Entry.__table__.insert()
             url_ins = URL.__table__.insert()
-            for i, d in enumerate(convert_file(program, file)):
+            count_num = 0
+            for d in convert_file(program, file):
+                if isinstance(d, Exception):
+                    # error occurred during processing file
+                    raise(d)
+                
                 browser_name = d.pop('browser_name')
                 browser_version = d.pop('browser_version')
                 source = d.pop('source_file')
@@ -366,11 +371,15 @@ class CaseController(BaseController):
                                 else:
                                     t.occurrence = t.occurrence + 1
                                 entry.search_terms.append(t)
-                                session.flush()                    
+                                session.flush()   
+                count_num = count_num + 1
+            if count_num == 0:
+            # we have not added anything, but no exceptions where raised.
+                return None, "No entries found in the uploaded file"             
         except Exception, e:
             session.rollback()            
-            return None
-        return True
+            return None, e
+        return True, None
     
     def addData(self, entry):
         """ 
@@ -384,8 +393,8 @@ class CaseController(BaseController):
         session.add(group)
         
         # convert the file to entries 
-        done = self.addEntry(group.program, entry['data'].stream, group)
+        done, error_msg = self.addEntry(group.program, entry['data'].stream, group)
         if done == True:
-            return group # used in jsonEditEntries
+            return group, None # used in jsonEditEntries
         else:
-            return None # exception happened!
+            return None, error_msg # exception happened!
